@@ -1,8 +1,8 @@
 <?php
 /*
 Plugin Name: LearnDash Course Users List
-Description: Lists all users enrolled in a selected LearnDash course in the WordPress admin area and allows exporting the list as a CSV file with a custom name.
-Version: 1.3
+Description: Lists all users enrolled in a selected LearnDash course in the WordPress admin area and allows exporting the list as a CSV file with a custom name. Also displays a summary of all courses with the number of enrolled users.
+Version: 1.3.1
 Author: Trim MemberFix
 License: GPL2
 */
@@ -75,13 +75,43 @@ function learndash_course_users_page() {
     ?>
     <div class="wrap">
         <h1><?php echo esc_html__('LearnDash Course Users - Trim MemberFix', 'learndash-course-users'); ?></h1>
+
+        <h2><?php esc_html_e('Courses Overview', 'learndash-course-users'); ?></h2>
+        <table class="widefat fixed striped">
+            <thead>
+                <tr>
+                    <th><?php esc_html_e('Course Title', 'learndash-course-users'); ?></th>
+                    <th><?php esc_html_e('Number Enrolled', 'learndash-course-users'); ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                $courses = learndash_get_all_course_ids();
+                if ($courses) {
+                    foreach ($courses as $course_id) {
+                        $users = learndash_get_users_for_course($course_id);
+                        $num_enrolled = is_object($users) ? count($users->results) : 0;
+                        ?>
+                        <tr>
+                            <td><?php echo esc_html(get_the_title($course_id)); ?></td>
+                            <td><?php echo esc_html($num_enrolled); ?></td>
+                        </tr>
+                        <?php
+                    }
+                } else {
+                    echo '<tr><td colspan="2">' . esc_html__('No courses found.', 'learndash-course-users') . '</td></tr>';
+                }
+                ?>
+            </tbody>
+        </table>
+
+        <h2><?php esc_html_e('View Users for a Specific Course', 'learndash-course-users'); ?></h2>
         <form method="get" action="">
             <input type="hidden" name="page" value="ld-course-users" />
             <label for="course"><?php echo esc_html__('Select Course:', 'learndash-course-users'); ?></label>
             <select id="course" name="course">
                 <option value=""><?php esc_html_e('-- Select Course --', 'learndash-course-users'); ?></option>
                 <?php
-                $courses = learndash_get_all_course_ids();
                 foreach ($courses as $course_id) {
                     $selected = (isset($_GET['course']) && $_GET['course'] == $course_id) ? 'selected' : '';
                     echo '<option value="' . esc_attr($course_id) . '" ' . esc_attr($selected) . '>' . esc_html(get_the_title($course_id)) . '</option>';
